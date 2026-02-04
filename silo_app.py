@@ -61,55 +61,82 @@ if raw_data.strip():
         B_L = make_block("B", 201, 101, df)
         B_R = make_block("B", 207, 107, df)
 
-        # ⭐️ 겹침 방지를 위해 'min-width'와 'overflow-x' 설정을 강화했습니다.
         st.components.v1.html(f"""
         <style>
-            .silo-wrapper {{ 
+            /* 전체 배경 및 정렬 */
+            body {{ margin: 0; background-color: #f4f7f6; }}
+            .main-wrapper {{ 
                 display: flex; flex-direction: column; align-items: center; 
-                gap: 50px; font-family: 'Malgun Gothic'; background-color: #fcfcfc; 
-                padding: 40px; min-width: 1650px; /* 가로 너비 강제 고정 */
+                width: 100%; padding: 20px; box-sizing: border-box;
             }}
-            .silo-row {{ display: flex; gap: 60px; justify-content: center; width: 100%; }}
-            .silo-container {{ 
-                position: relative; width: 780px; height: 500px; 
-                border: 3px solid #333; background: #fff; 
-                border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-                flex-shrink: 0; /* 절대 줄어들지 않게 설정 */
-            }}
-            .rect-grid {{ display: grid; grid-template-columns: repeat(7, 90px); grid-template-rows: repeat(2, 160px); position: relative; }}
-            .rect-item {{ border: 1px solid #eee; width: 90px; height: 160px; position: relative; }}
-            .circle-overlay {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }}
-            .circle-item {{ 
-                position: absolute; width: 100px; height: 100px; border-radius: 50%; 
-                border: 2.5px solid #000; background: #fff; display: flex; 
-                align-items: center; justify-content: center; transform: translate(-50%, -50%); 
-                pointer-events: auto; transition: 0.2s; 
-            }}
-            .circle-item:hover {{ transform: translate(-50%, -50%) scale(1.1); z-index: 20; box-shadow: 0 0 15px rgba(0,0,0,0.3); }}
             
-            .text-box {{ display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; cursor: pointer; }}
+            /* 싸이로 그룹 (A/B) */
+            .silo-group {{ 
+                margin-bottom: 60px; text-align: center; 
+                display: flex; flex-direction: column; align-items: center;
+            }}
+            .group-title {{ 
+                font-size: 32px; font-weight: bold; margin-bottom: 20px; color: #2c3e50;
+                border-bottom: 4px solid #74c934; padding-bottom: 5px; width: fit-content;
+            }}
+
+            /* 좌우 배치 컨테이너 */
+            .side-by-side {{ 
+                display: flex; gap: 30px; justify-content: center; align-items: flex-start;
+            }}
+
+            /* 개별 싸이로 박스 */
+            .silo-container {{ 
+                position: relative; width: 750px; height: 480px; 
+                border: 3px solid #333; background: #fff; 
+                border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                overflow: hidden; flex-shrink: 0;
+            }}
+
+            /* 내부 그리드 및 아이템 스타일 */
+            .rect-grid {{ display: grid; grid-template-columns: repeat(7, 1fr); width: 100%; height: 320px; }}
+            .rect-item {{ border: 0.5px solid #eee; position: relative; }}
+            .circle-overlay {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }}
+            .circle-item {{ 
+                position: absolute; width: 95px; height: 95px; border-radius: 50%; 
+                border: 2px solid #000; background: #fff; display: flex; 
+                align-items: center; justify-content: center; transform: translate(-50%, -50%); 
+                pointer-events: auto; transition: 0.2s; z-index: 5;
+            }}
+            .circle-item:hover {{ transform: translate(-50%, -50%) scale(1.1); z-index: 50; box-shadow: 0 0 15px rgba(0,0,0,0.3); }}
+            
+            /* 텍스트 및 툴팁 */
+            .text-box {{ display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: pointer; }}
             .text-box::after {{
                 content: "📍 " attr(data-code) "\\A🌾 " attr(data-name) "\\A📦 " attr(data-qty) "t";
-                white-space: pre; position: absolute; bottom: 115%; left: 50%; transform: translateX(-50%);
-                background: rgba(0,0,0,0.85); color: white; padding: 10px; border-radius: 6px; font-size: 13px;
-                opacity: 0; visibility: hidden; transition: 0.2s; z-index: 999; width: 110px; line-height: 1.4;
+                white-space: pre; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+                background: rgba(44, 62, 80, 0.95); color: white; padding: 10px; border-radius: 6px; font-size: 13px;
+                opacity: 0; visibility: hidden; transition: 0.2s; z-index: 100; width: 100px; line-height: 1.4;
             }}
             .text-box:hover::after {{ opacity: 1; visibility: visible; }}
             
-            .p-name {{ font-size: 15px; font-weight: bold; }}
-            .p-qty {{ font-size: 14px; font-weight: bold; }}
-            .p-code {{ font-size: 11px; color: #74c934; }}
+            .p-name {{ font-size: 14px; font-weight: bold; }}
+            .p-qty {{ font-size: 13px; font-weight: bold; }}
+            .p-code {{ font-size: 10px; color: #7f8c8d; }}
         </style>
-        <div class="silo-wrapper">
-            <div>
-                <div style="font-size:28px; font-weight:bold; text-align:center; margin-bottom:15px;">싸이로 A</div>
-                <div class="silo-row"><div class="silo-container">{A_L}</div><div class="silo-container">{A_R}</div></div>
+
+        <div class="main-wrapper">
+            <div class="silo-group">
+                <div class="group-title">SILO A</div>
+                <div class="side-by-side">
+                    <div class="silo-container">{A_L}</div>
+                    <div class="silo-container">{A_R}</div>
+                </div>
             </div>
-            <div>
-                <div style="font-size:28px; font-weight:bold; text-align:center; margin-bottom:15px; margin-top:20px;">싸이로 B</div>
-                <div class="silo-row"><div class="silo-container">{B_L}</div><div class="silo-container">{B_R}</div></div>
+
+            <div class="silo-group">
+                <div class="group-title">SILO B</div>
+                <div class="side-by-side">
+                    <div class="silo-container">{B_L}</div>
+                    <div class="silo-container">{B_R}</div>
+                </div>
             </div>
         </div>
-        """, height=1300)
+        """, height=1250)
     except Exception as e:
-        st.error(f"데이터 형식이 올바르지 않습니다. ({e})")
+        st.error(f"데이터 에러: {e}")
